@@ -27,7 +27,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="asynctaskgraph", # Replace with your own username
-    version="0.0.4",
+    version="0.0.5",
     author="Filip Kofron",
     author_email="filip.kofron.cz@gmail.com",
     description="Async task graph and executor.",
