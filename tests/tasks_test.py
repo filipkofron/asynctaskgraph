@@ -24,7 +24,7 @@ from typing import Callable, List
 from functools import partial
 import logging
 import os
-import requests
+import random
 import sys
 import time
 
@@ -36,8 +36,9 @@ logging.basicConfig(format="%(threadName)s:\t%(message)s")
 start = time.time()
 
 def download_url(url: str, executor: Executor):
-    with requests.get(url) as r:
-        return r.text
+    logging.info(f"Simulating download of {url} start.")
+    time.sleep(random.random() * 0.1)
+    logging.info(f"Simulating download of {url} end")
 
 def download_task(download_func: Callable[[],str], resultt: List[str], executor: Executor) -> List[Task]:
     resultt.append(download_func())
@@ -60,7 +61,7 @@ def test2():
         tasks.append(task)
 
     for i in range(n_tasks):
-        executor.schedule(tasks[i])
+        executor.scheduleTask(tasks[i])
 
     #finish_task = Task(lambda: print(f"{sum(len(result) for result in results_lists)}"), tasks)
     #finish_task = Task(lambda: print(f"{results_lists[0]}"), tasks)
@@ -84,13 +85,13 @@ def test3():
         return AsyncResult(result, Task(taskWork))
     defResult = getDeferredResult("Blah")
     executor = Executor()
-    executor.schedule(defResult.task)
+    executor.scheduleTask(defResult.task)
     
     def whenDone(executor: Executor):
         print(f"Result: {defResult.result.retrieve_result()}")
         return []
     
-    executor.schedule(Task(whenDone, [defResult.task]))
+    executor.scheduleFuncWithDeps(whenDone, [defResult.task])
     executor.wait_until_tasks_done()
     executor.join()
 
@@ -102,21 +103,19 @@ def test4():
     print(f"> Test 4")
 
     with Executor(n_threads=0, manual_execution=True) as executor:
-        task = Task(partial(nop_print, 0, []))
+        task = executor.scheduleFunc(nop_print, 0, [])
         setattr(task, "DEBUG_NAME", "task")
-        executor.schedule(task)
 
-        task2 = Task(partial(nop_print, 1, [task]), [])
+        task2 = executor.scheduleFunc(nop_print, 1, [task])
         setattr(task2, "DEBUG_NAME", "task2")
-        executor.schedule(task2)
         executor.manual_execute()
 
-        task3 = Task(partial(nop_print, 2, []), [task2])
+        task3 = executor.scheduleFuncWithDeps(nop_print, [task2], 2, [])
         setattr(task3, "DEBUG_NAME", "task3")
-        executor.schedule(task3)
+        (task3)
         executor.manual_execute()
         executor.manual_execute()
-        
+
         # Nothing should be done
         executor.manual_execute()
 
@@ -133,15 +132,15 @@ def test5():
     with Executor(n_threads=2) as executor:
         task = Task(partial(nop_print, 0, []))
         setattr(task, "DEBUG_NAME", "task")
-        executor.schedule(task)
+        executor.scheduleTask(task)
 
         task2 = Task(partial(nop_print, 1, [task]), [])
         setattr(task2, "DEBUG_NAME", "task2")
-        executor.schedule(task2)
+        executor.scheduleTask(task2)
 
         task3 = Task(partial(nop_print, 2, []), [task2])
         setattr(task3, "DEBUG_NAME", "task3")
-        executor.schedule(task3)
+        executor.scheduleTask(task3)
 
         executor.wait_until_tasks_done()
 
@@ -170,9 +169,9 @@ def test6():
         setattr(task3, "DEBUG_NAME", "task3")
         setattr(task2, "DEBUG_NAME", "task2")
         setattr(task, "DEBUG_NAME", "task")
-        executor.schedule(task3)
-        executor.schedule(task2)
-        executor.schedule(task)
+        executor.scheduleTask(task3)
+        executor.scheduleTask(task2)
+        executor.scheduleTask(task)
 
         executor.wait_until_tasks_done()
 
