@@ -132,28 +132,28 @@ class Executor:
         self.wait_until_tasks_done()
         self.join()
 
-    def scheduleTask(self, task: Task) -> None:
+    def schedule_task(self, task: Task) -> None:
         """ Schedule task for execution now or later when its dependencies are satisfied. Can only be done once for the given task. """
         if self.joining:
             raise Exception("No task can be scheduled during joining.")
         if task.on_schedule(self.__wake_callback):
             self.queue.put(task)
 
-    def scheduleFunc(self, function, *args) -> Task:
+    def schedule_func(self, function, *args) -> Task:
         """ Schedules function as a task with no depencencies and returns the task. """
-        return self.scheduleFuncWithDeps(function, [], *args)
+        return self.schedule_func_with_deps(function, [], *args)
 
-    def scheduleFuncWithDeps(self, function, dependencies: List[Task], *args) -> Task:
+    def schedule_func_with_deps(self, function, dependencies: List[Task], *args) -> Task:
         """ Schedule task with given dependencies. Task will only be executed after all dependencies have been satisfied. Can only be done once for the given task. """
         task = Task(partial(function, *args), dependencies)
-        self.scheduleTask(task)
+        self.schedule_task(task)
         return task
 
-    def makeTask(self, function, *args):
+    def make_task(self, function, *args):
         """ Returns a new unscheduled task from the function and given arguments. """
-        return self.makeTaskWithDeps(function, [], *args)
+        return self.make_task_with_deps(function, [], *args)
 
-    def makeTaskWithDeps(self, function, dependencies: List[Task], *args):
+    def make_task_with_deps(self, function, dependencies: List[Task], *args):
         """ Returns a new unscheduled task from the function, dependencies and given arguments. """
         return Task(partial(function, *args), dependencies)
 

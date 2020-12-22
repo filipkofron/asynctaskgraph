@@ -57,11 +57,11 @@ def test2():
 
     tasks = []
     for i in range(n_tasks):
-        task = Task(lambda executor: download_task(partial(download_url, urls[i], executor), results_lists[i], executor))
+        task = executor.make_task(lambda executor: download_task(partial(download_url, urls[i], executor), results_lists[i], executor))
         tasks.append(task)
 
     for i in range(n_tasks):
-        executor.scheduleTask(tasks[i])
+        executor.schedule_task(tasks[i])
 
     #finish_task = Task(lambda: print(f"{sum(len(result) for result in results_lists)}"), tasks)
     #finish_task = Task(lambda: print(f"{results_lists[0]}"), tasks)
@@ -85,13 +85,13 @@ def test3():
         return AsyncResult(result, Task(taskWork))
     defResult = getDeferredResult("Blah")
     executor = Executor()
-    executor.scheduleTask(defResult.task)
+    executor.schedule_task(defResult.task)
     
     def whenDone(executor: Executor):
         print(f"Result: {defResult.result.retrieve_result()}")
         return []
     
-    executor.scheduleFuncWithDeps(whenDone, [defResult.task])
+    executor.schedule_func_with_deps(whenDone, [defResult.task])
     executor.wait_until_tasks_done()
     executor.join()
 
@@ -103,14 +103,14 @@ def test4():
     print(f"> Test 4")
 
     with Executor(n_threads=0, manual_execution=True) as executor:
-        task = executor.scheduleFunc(nop_print, 0, [])
+        task = executor.schedule_func(nop_print, 0, [])
         setattr(task, "DEBUG_NAME", "task")
 
-        task2 = executor.scheduleFunc(nop_print, 1, [task])
+        task2 = executor.schedule_func(nop_print, 1, [task])
         setattr(task2, "DEBUG_NAME", "task2")
         executor.manual_execute()
 
-        task3 = executor.scheduleFuncWithDeps(nop_print, [task2], 2, [])
+        task3 = executor.schedule_func_with_deps(nop_print, [task2], 2, [])
         setattr(task3, "DEBUG_NAME", "task3")
         (task3)
         executor.manual_execute()
@@ -132,15 +132,15 @@ def test5():
     with Executor(n_threads=2) as executor:
         task = Task(partial(nop_print, 0, []))
         setattr(task, "DEBUG_NAME", "task")
-        executor.scheduleTask(task)
+        executor.schedule_task(task)
 
         task2 = Task(partial(nop_print, 1, [task]), [])
         setattr(task2, "DEBUG_NAME", "task2")
-        executor.scheduleTask(task2)
+        executor.schedule_task(task2)
 
         task3 = Task(partial(nop_print, 2, []), [task2])
         setattr(task3, "DEBUG_NAME", "task3")
-        executor.scheduleTask(task3)
+        executor.schedule_task(task3)
 
         executor.wait_until_tasks_done()
 
@@ -169,9 +169,9 @@ def test6():
         setattr(task3, "DEBUG_NAME", "task3")
         setattr(task2, "DEBUG_NAME", "task2")
         setattr(task, "DEBUG_NAME", "task")
-        executor.scheduleTask(task3)
-        executor.scheduleTask(task2)
-        executor.scheduleTask(task)
+        executor.schedule_task(task3)
+        executor.schedule_task(task2)
+        executor.schedule_task(task)
 
         executor.wait_until_tasks_done()
 
